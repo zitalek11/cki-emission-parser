@@ -8,7 +8,12 @@ from pathlib import Path
 from cki_emission_parser.env import load_local_env
 from cki_emission_parser.eval.score import load_gold, score_report
 from cki_emission_parser.extraction.instrument import guess_instrument_class
-from cki_emission_parser.extraction.llm import NullLlmProvider, provider_from_env
+from cki_emission_parser.extraction.llm import (
+    LlmRequestError,
+    NullLlmProvider,
+    OpenAiCompatibleProvider,
+    provider_from_env,
+)
 from cki_emission_parser.extraction.pipeline import extract_job
 from cki_emission_parser.extraction.retrieve import retrieve_job
 from cki_emission_parser.ingestion import ingest_pack
@@ -76,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--serve", action="store_true", help="Локальный HTTP-разбор файлов")
     parser.add_argument("--host", default="127.0.0.1", help="Адрес для --serve")
     parser.add_argument("--port", type=int, default=8765, help="Порт для --serve")
+    parser.add_argument("--llm-ping", action="store_true", help="Проверить доступ к модели и выйти")
     args = parser.parse_args(argv)
     load_local_env()
 
@@ -85,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Каталог НРД: {len(catalog.fields)} полей")
         print(f"Набор извлечения MVP: {len(extract.fields)} полей")
         return 0
+
+    if args.llm_ping:
+        return _llm_ping()
 
     if args.serve:
         from cki_emission_parser.serve import run_server
@@ -121,7 +130,13 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             provider = NullLlmProvider()
-        report = extract_job(job, provider=provider, instrument_class=job.instrument_class)
+        if isinstance(provider, OpenAiCompatibleProvider):
+            print(f"LLM: {provider.base_url}  model={provider.model}", file=sys.stderr)
+        try:
+            report = extract_job(job, provider=provider, instrument_class=job.instrument_class)
+        except LlmRequestError as exc:
+            print(exc, file=sys.stderr)
+            return 1
         payload = report_to_dict(report, include_retrieval=args.with_retrieval)
         if args.out:
             fmt = infer_output_format(args.out, args.output_format)
@@ -183,6 +198,75 @@ def main(argv: list[str] | None = None) -> int:
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0
+
+
+def _llm_ping() -> int:
+    provider = provider_from_env()
+    if provider is None:
+        print("CKI_LLM_API_KEY не задан (.env или окружение).", file=sys.stderr)
+        return 2
+    if not isinstance(provider, OpenAiCompatibleProvider):
+        print("Пинг доступен только для OpenAI-совместимого шлюза.", file=sys.stderr)
+        return 2
+    print(f"base_url: {provider.base_url}")
+    print(f"model: {provider.model}")
+    try:
+        listed = provider.list_models()
+    except RuntimeError as exc:
+        print(f"GET /models: {exc}")
+        listed = None
+    if listed is None:
+        print("GET /models: список недоступен")
+    else:
+        ids = _model_ids(listed)
+        if ids:
+            print(f"доступные ID: {', '.join(ids)}")
+            best = _prefer_model(ids)
+            if best:
+                print(f"лучший из списка: {best}")
+        else:
+            print(f"GET /models: {listed}")
+    try:
+        reply = provider.ping()
+    except RuntimeError as exc:
+        print(f"chat/completions: {exc}")
+        return 1
+    print(f"chat/completions: {reply.strip()[:240]}")
+    return 0
+
+
+def _model_ids(payload: dict | list) -> list[str]:
+    rows = payload.get("data", payload) if isinstance(payload, dict) else payload
+    if not isinstance(rows, list):
+        return []
+    ids: list[str] = []
+    for item in rows:
+        if isinstance(item, str):
+            ids.append(item)
+        elif isinstance(item, dict) and item.get("id"):
+            ids.append(str(item["id"]))
+    return ids
+
+
+def _prefer_model(ids: list[str]) -> str | None:
+    if not ids:
+        return None
+    rank = (
+        "strong",
+        "reasoning",
+        "gpt-4.1",
+        "gpt-4o",
+        "o3",
+        "o1",
+        "medium",
+        "fast",
+    )
+    lower = {item.lower(): item for item in ids}
+    for key in rank:
+        for lid, original in lower.items():
+            if lid == key or lid.endswith("/" + key) or lid.endswith("-" + key):
+                return original
+    return ids[0]
 
 
 def _evaluate_report(report_path: Path, gold_path: Path) -> int:

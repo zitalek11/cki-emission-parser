@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 from cki_emission_parser.env import load_local_env
 from cki_emission_parser.extraction.instrument import guess_instrument_class
-from cki_emission_parser.extraction.llm import NullLlmProvider, provider_from_env
+from cki_emission_parser.extraction.llm import LlmRequestError, NullLlmProvider, provider_from_env
 from cki_emission_parser.extraction.pipeline import extract_job
 from cki_emission_parser.ingestion import ingest_pack
 from cki_emission_parser.output.html_review import render_review_html
@@ -47,7 +47,14 @@ def extract_to_html(path: Path) -> str:
     job = ingest_pack(path)
     job.instrument_class = guess_instrument_class(job)
     provider = provider_from_env() or NullLlmProvider()
-    report = extract_job(job, provider=provider, instrument_class=job.instrument_class)
+    try:
+        report = extract_job(job, provider=provider, instrument_class=job.instrument_class)
+    except LlmRequestError as exc:
+        return (
+            "<!DOCTYPE html><html lang=\"ru\"><meta charset=\"utf-8\"/>"
+            f"<body><h1>Ошибка модели</h1><pre>{html.escape(str(exc))}</pre>"
+            '<p><a href="/">← новый файл</a></p></body></html>'
+        )
     page = render_review_html(report)
     nav = (
         '<p><a href="/">← новый файл</a></p>'

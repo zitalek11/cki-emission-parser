@@ -42,6 +42,7 @@ python -m cki_emission_parser path/to/pack --extract --out reports/extract.xlsx
 python -m cki_emission_parser path/to/pack --extract --out reports/review.html
 python -m cki_emission_parser --evaluate config/eval/gold.example.yaml --report reports/extract.json
 python -m cki_emission_parser path/to/pack --evaluate config/eval/gold.yaml
+python -m cki_emission_parser --llm-ping
 python -m cki_emission_parser --serve
 pytest
 ```
@@ -55,9 +56,19 @@ JSON извлечения содержит поля, цитаты и `review_que
 и даты-правила не превращаются в числа и даты Excel. Числовая колонка
 только для integer/money. HTML-ревью на русском; латиница — id полей, CFI, статусы.
 
-Внешние источники по умолчанию выключены. Для `--extract` задайте
-`CKI_LLM_API_KEY` или `OPENAI_API_KEY` (по желанию `CKI_LLM_BASE_URL`,
-`CKI_LLM_MODEL`). Без ключа поля остаются `not_found`.
+Внешние источники по умолчанию выключены. Для `--extract` в каталоге проекта
+нужен файл `.env`:
+
+```
+CKI_LLM_API_KEY=...
+CKI_LLM_BASE_URL=https://api-new.ai.moex.com/v1
+CKI_LLM_MODEL=strong
+```
+
+В `model` указывайте **ID** (`strong`), не имя вроде `openai/gpt-4o-mini` —
+шлюз MOEX на неизвестный ID отвечает HTTP 404. URL — без хвоста
+`/chat/completions`. Проверка: `--llm-ping`. Без ключа поля остаются
+`not_found`.
 
 ## Эталонные документы
 

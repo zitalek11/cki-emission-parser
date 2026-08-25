@@ -7,11 +7,17 @@ from cki_emission_parser.paths import package_root
 
 
 def load_local_env() -> None:
-    """Подхватывает .env из каталога пакета и корня CKI, не перезаписывая уже заданные переменные."""
-    for path in (package_root() / ".env", package_root().parent / ".env"):
-        if not path.is_file():
+    """Подхватывает .env из каталога пакета, cwd и корня CKI, не перезаписывая уже заданные переменные."""
+    seen: set[Path] = set()
+    for path in (package_root() / ".env", Path.cwd() / ".env", package_root().parent / ".env"):
+        try:
+            resolved = path.resolve()
+        except OSError:
             continue
-        for raw in path.read_text(encoding="utf-8").splitlines():
+        if resolved in seen or not path.is_file():
+            continue
+        seen.add(resolved)
+        for raw in path.read_text(encoding="utf-8-sig").splitlines():
             line = raw.strip()
             if not line or line.startswith("#") or "=" not in line:
                 continue

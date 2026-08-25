@@ -206,8 +206,9 @@ def test_write_extract_output_picks_format_from_suffix(tmp_path: Path) -> None:
 
 
 def test_extract_cli_writes_xlsx(digital_pdf: Path, tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.delenv("CKI_LLM_API_KEY", raising=False)
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("CKI_LLM_API_KEY", "")
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    monkeypatch.setattr("cki_emission_parser.cli.load_local_env", lambda: None)
     out = tmp_path / "cli-report.xlsx"
     code = main([str(digital_pdf), "--extract", "--instrument", "bond_exchange", "--out", str(out)])
     assert code == 0

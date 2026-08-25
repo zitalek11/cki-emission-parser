@@ -1,6 +1,13 @@
 from tests.helpers import build_job, field_spec, mini_set
 
-from cki_emission_parser.extraction.llm import NullLlmProvider, ScriptedLlmProvider
+from cki_emission_parser.cli import _prefer_model
+from cki_emission_parser.extraction.llm import (
+    NullLlmProvider,
+    ScriptedLlmProvider,
+    _want_json_object,
+    normalize_base_url,
+    resolve_model,
+)
 from cki_emission_parser.extraction.pipeline import extract_job
 from cki_emission_parser.schema import load_extract_set
 
@@ -140,3 +147,27 @@ def test_wrong_source_id_is_rejected() -> None:
         instrument_class="bond_exchange",
     )
     assert report.fields[0].status == "not_found"
+
+
+def test_moex_skips_json_object_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("CKI_LLM_JSON_OBJECT", raising=False)
+    assert _want_json_object("https://api-new.ai.moex.com/v1") is False
+    assert _want_json_object("https://openrouter.ai/api/v1") is True
+
+
+def test_prefer_strong_model_id() -> None:
+    assert _prefer_model(["fast", "strong", "medium"]) == "strong"
+
+
+def test_normalize_moex_base_url() -> None:
+    assert normalize_base_url("https://api-new.ai.moex.com") == "https://api-new.ai.moex.com/v1"
+    assert (
+        normalize_base_url("https://api-new.ai.moex.com/v1/chat/completions")
+        == "https://api-new.ai.moex.com/v1"
+    )
+
+
+def test_moex_rejects_openrouter_model_id() -> None:
+    assert resolve_model("https://api-new.ai.moex.com/v1", "openai/gpt-4o-mini") == "strong"
+    assert resolve_model("https://api-new.ai.moex.com/v1", None) == "strong"
+    assert resolve_model("https://api-new.ai.moex.com/v1", "fast") == "fast"

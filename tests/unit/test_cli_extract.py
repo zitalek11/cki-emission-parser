@@ -25,10 +25,20 @@ def test_extract_report_json_has_fields_not_fragments() -> None:
     assert "retrieval" not in payload
 
 
+def test_llm_ping_without_key(monkeypatch, capsys) -> None:
+    monkeypatch.delenv("CKI_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr("cki_emission_parser.cli.load_local_env", lambda: None)
+    code = main(["--llm-ping"])
+    assert code == 2
+    assert "CKI_LLM_API_KEY" in capsys.readouterr().err
+
+
 def test_dry_retrieve_cli(digital_pdf: Path, capsys) -> None:
     code = main([str(digital_pdf), "--dry-retrieve", "--instrument", "bond_exchange"])
     assert code == 0
-    payload = json.loads(capsys.readouterr().out)
+    out = capsys.readouterr().out
+    payload = json.loads(out[out.find("{") :])
     assert payload["instrument_class"] == "bond_exchange"
     assert "issuer.name_full" in payload["hit_fields"]
     assert payload["retrieval"]["issuer.name_full"]
