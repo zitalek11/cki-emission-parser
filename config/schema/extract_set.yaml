@@ -1,0 +1,351 @@
+# Подмножество полей НРД, которое MVP пытается извлечь из документов.
+# Полный каталог API — nrd_catalog.xlsx (~2124 поля). Его не кладём в промпт.
+version: 1
+instrument_classes:
+  - share_common
+  - share_pref
+  - bond_exchange
+  - bond_structured
+  - unknown
+
+fields:
+  - id: name_full
+    nrd_path: name_full
+    title: Полное наименование ценной бумаги
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - полное наименование
+      - вид, категория
+      - идентификационные признаки
+      - иные идентификационные признаки
+    preferred_documents: [issuance_decision, bond_program, placement_terms, prospectus]
+
+  - id: state_reg_number
+    nrd_path: state_reg_number
+    title: Государственный регистрационный номер / идентификационный номер выпуска
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - регистрационный номер
+      - государственный регистрационный номер
+      - идентификационный номер выпуска
+      - номер выпуска
+    preferred_documents: [issuance_decision, issuance_results, bond_program]
+
+  - id: state_reg_date
+    nrd_path: state_reg_date
+    title: Дата регистрации выпуска
+    type: date
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - зарегистрировано
+      - дата регистрации
+      - дата государственной регистрации
+    preferred_documents: [issuance_decision, issuance_results, bond_program]
+
+  - id: for_qualified_investors
+    nrd_path: for_qualified_investors
+    title: Для квалифицированных инвесторов
+    type: boolean
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - квалифицированных инвесторов
+      - предназначены для квалифицированных
+      - не являются ценными бумагами, предназначенными для квалифицированных
+    preferred_documents: [issuance_decision, bond_program, prospectus]
+    notes: "Молчание документа ≠ Нет. Нужна прямая формулировка."
+
+  - id: cfi
+    nrd_path: cfi
+    title: Код CFI
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms: [CFI, код CFI]
+    notes: "Не выводить CFI из признаков бумаги. Отдельный калькулятор — позже, статус derived."
+
+  - id: form.name
+    nrd_path: form.name
+    title: Форма выпуска
+    type: enum
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - бездокументарные
+      - документарные
+      - форма выпуска
+    preferred_documents: [issuance_decision, bond_program]
+
+  - id: issuer.name_full
+    nrd_path: issuer.name_full
+    title: Полное фирменное наименование эмитента
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - полное фирменное наименование
+      - эмитент
+    preferred_documents: [issuance_decision, bond_program, prospectus, placement_terms]
+
+  - id: issuer.name_short
+    nrd_path: issuer.name_short
+    title: Сокращённое наименование эмитента
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - сокращённое фирменное наименование
+      - краткое наименование
+    notes: "Нельзя выводить из полного наименования. Нужна явная краткая форма в тексте."
+
+  - id: issuer.inn
+    nrd_path: issuer.inn
+    title: ИНН эмитента
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms: [ИНН]
+    notes: "Не извлекать ИНН из URL страницы раскрытия."
+
+  - id: issuer.ogrn
+    nrd_path: issuer.ogrn
+    title: ОГРН эмитента
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms: [ОГРН]
+    notes: "Не путать с ОГРН приобретателя / регистратора / депозитария."
+
+  - id: issuer.address
+    nrd_path: issuer.address
+    title: Место нахождения эмитента
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - место нахождения
+      - место нахождения эмитента
+
+  - id: issuer.www
+    nrd_path: issuer.www
+    title: Страница в сети Интернет
+    type: string
+    applies_to: [share_common, share_pref, bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - страница в сети Интернет
+      - адрес страницы
+
+  - id: share.face_value
+    nrd_path: share.face_value
+    title: Номинальная стоимость акции
+    type: money
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - номинальная стоимость
+      - номинал
+    preferred_documents: [issuance_decision, prospectus, issuance_results]
+
+  - id: share.issue_size_planned
+    nrd_path: share.issue_size_planned
+    title: Количество размещаемых акций (план)
+    type: integer
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - количество размещаемых
+      - количество ценных бумаг дополнительного выпуска
+      - объявленное количество
+    preferred_documents: [issuance_decision, placement_terms, prospectus]
+    notes: "Не смешивать с фактически размещённым количеством."
+
+  - id: share.issued_size
+    nrd_path: share.issued_size
+    title: Количество фактически размещённых акций
+    type: integer
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - фактически размещенных
+      - количество размещённых
+    preferred_documents: [issuance_results]
+
+  - id: share.category.name_full
+    nrd_path: share.category.name_full
+    title: Категория акций
+    type: enum
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - обыкновенные
+      - привилегированные
+      - категория акций
+
+  - id: share.placement_type.name
+    nrd_path: share.placement_type.name
+    title: Способ размещения
+    type: string
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - способ размещения
+      - закрытая подписка
+      - открытая подписка
+
+  - id: share.start_placement_date
+    nrd_path: share.start_placement_date
+    title: Дата начала размещения
+    type: date
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - дата начала размещения
+      - срок размещения
+
+  - id: share.end_placement_date
+    nrd_path: share.end_placement_date
+    title: Дата окончания размещения
+    type: date
+    applies_to: [share_common, share_pref]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - дата окончания размещения
+      - дата фактического окончания размещения
+
+  - id: bond.face_value
+    nrd_path: bond.face_value
+    title: Номинальная стоимость облигации
+    type: money
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - номинальная стоимость каждой
+      - номинальная стоимость
+      - номинал одной
+    preferred_documents: [issuance_decision, placement_terms]
+
+  - id: bond.currency.code
+    nrd_path: bond.currency.code
+    title: Валюта номинала
+    type: currency
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: true
+    derivation_rule: currency_from_text
+    synonyms:
+      - российских рублей
+      - рублях Российской Федерации
+      - валюта номинала
+
+  - id: bond.issue_size_planned
+    nrd_path: bond.issue_size_planned
+    title: Количество облигаций (план)
+    type: integer
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - количество размещаемых
+      - максимальное количество
+    preferred_documents: [placement_terms, issuance_decision]
+
+  - id: bond.expiry_date_plan
+    nrd_path: bond.expiry_date_plan
+    title: Дата / порядок определения даты погашения
+    type: date
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    date_kinds: [exact, rule, relative, range]
+    synonyms:
+      - срок погашения
+      - погашаются
+      - дата погашения
+    notes: "Правило («N-й день с даты начала размещения») не сводить к календарной дате."
+
+  - id: bond.coupons_number
+    nrd_path: bond.coupons_number
+    title: Количество купонных периодов
+    type: integer
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - количество купонных периодов
+      - число купонов
+
+  - id: bond.rate_type.name
+    nrd_path: bond.rate_type.name
+    title: Тип купона
+    type: string
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - процентная ставка
+      - купонный доход
+      - фиксированная
+      - переменная
+      - плавающая
+
+  - id: bond.bond_prog.number
+    nrd_path: bond.bond_prog.number
+    title: Регистрационный номер программы облигаций
+    type: string
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - регистрационный номер программы
+      - программа облигаций
+    preferred_documents: [bond_program, issuance_decision]
+
+  - id: bond.bond_prog.reg_date
+    nrd_path: bond.bond_prog.reg_date
+    title: Дата регистрации программы
+    type: date
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    synonyms:
+      - зарегистрировано
+      - дата регистрации программы
+    preferred_documents: [bond_program]
+
+  - id: bond.start_placement_date
+    nrd_path: bond.start_placement_date
+    title: Дата начала размещения облигаций
+    type: date
+    applies_to: [bond_exchange, bond_structured]
+    required_evidence: true
+    allow_derivation: false
+    date_kinds: [exact, rule]
+    synonyms:
+      - дата начала размещения
+    preferred_documents: [placement_terms, issuance_decision]

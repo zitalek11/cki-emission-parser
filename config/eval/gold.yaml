@@ -1,0 +1,96 @@
+# Эталон по комплектам архива. Цитаты сняты с PDF/DOCX, не из Excel-разбора.
+# match — путь комплекта в архиве, не правило «если эмитент = …».
+version: 1
+notes: >
+  accepted только с цитатой из документа. CFI и краткое имя без явной метки
+  в тексте — must-be-empty. ИНН депозитария — known-bad.
+
+packs:
+  - id: bond_exchange_pack_1
+    match: Биржевые облигации/Пример 1
+    instrument_class: bond_exchange
+    slice: known_document
+    fields:
+      - field: bond.currency.code
+        label: accepted
+        value: RUB
+        quote_contains: российск
+        reason: Валюта выводится правилом currency_from_text.
+      - field: cfi
+        label: must-be-empty
+        reason: Кода CFI в комплекте нет.
+      - field: issuer.inn
+        label: must-be-empty
+        reason: В тексте нет ИНН эмитента, только шаблон «ИНН (если применимо)».
+      - field: for_qualified_investors
+        label: accepted
+        value: false
+        quote_contains: не являются и не могут являться ценными бумагами, предназначенными для квалифицированных
+        requires_llm: true
+
+  - id: bond_exchange_pack_2
+    match: Биржевые облигации/Пример 2
+    instrument_class: bond_exchange
+    slice: known_document
+    fields:
+      - field: bond.currency.code
+        label: accepted
+        value: RUB
+        quote_contains: российск
+      - field: cfi
+        label: must-be-empty
+        reason: Кода CFI в комплекте нет.
+      - field: issuer.inn
+        label: known-bad
+        value: "7702165310"
+        reason: ИНН НРД, не эмитента.
+
+  - id: share_pref_incomplete
+    match: Акции привилегированные/Пример 2
+    instrument_class: share_pref
+    slice: incomplete_pack
+    fields:
+      - field: cfi
+        label: must-be-empty
+      - field: for_qualified_investors
+        label: must-be-empty
+        reason: В решении нет оговорки про квалинвесторов. Молчание ≠ нет.
+      - field: issuer.inn
+        label: must-be-empty
+      - field: share.face_value
+        label: accepted
+        value:
+          amount: 0.01
+          currency: RUB
+        quote_contains: ноль целых одна сотая
+        requires_llm: true
+
+  - id: bond_structured_docx
+    match: Стрктурные облигации/Пример 1
+    instrument_class: bond_structured
+    slice: known_document
+    fields:
+      - field: bond.currency.code
+        label: accepted
+        value: RUB
+        quote_contains: российск
+      - field: cfi
+        label: must-be-empty
+      - field: for_qualified_investors
+        label: accepted
+        value: true
+        quote_contains: ПРЕДНАЗНАЧЕННЫМИ ДЛЯ КВАЛИФИЦИРОВАННЫХ ИНВЕСТОРОВ
+        requires_llm: true
+
+  - id: share_common_scan
+    match: Акция обыкновенные/Пример 1
+    instrument_class: share_common
+    slice: scan_pdf
+    fields:
+      - field: cfi
+        label: must-be-empty
+        reason: Скан без текстового слоя; без OCR значения быть не должно.
+      - field: issuer.inn
+        label: must-be-empty
+      - field: for_qualified_investors
+        label: must-be-empty

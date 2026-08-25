@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+reports/*.json
+reports/*.xlsx
+reports/*.html
+data/examples/packs/
+*.egg-info/
+dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+

@@ -1,0 +1,41 @@
+# Эталон для оценки извлечения. Это не импорт Excel-разбора.
+# Excel-значения без приёмки цитаты не считаются истиной.
+#
+# label:
+#   accepted      — человек принял значение и цитату
+#   must-be-empty — система не должна ничего подставлять (молчание ≠ нет)
+#   known-bad     — старый разбор заполнил поле ошибочно; повтор — ошибка
+#
+# Главная метрика: unsupported_value_rate → 0
+# (доля выданных значений, которые эталон не принимает).
+version: 1
+notes: >
+  Не копировать «Разбор эмиссионной документации.xlsx» как ground truth.
+  Сначала принять цитату, потом ставить accepted.
+
+fields:
+  - field: for_qualified_investors
+    label: must-be-empty
+    slice: silence
+    reason: Молчание документа не равно «нет».
+
+  - field: cfi
+    label: known-bad
+    value: ESVUFR
+    slice: derived_without_rule
+    reason: CFI нельзя выводить из типа бумаги, если кода нет в тексте.
+
+  - field: issuer.name_short
+    label: must-be-empty
+    slice: derived_without_rule
+    reason: Краткое имя нельзя выводить из полного.
+
+cases:
+  - id: accepted_name_with_quote
+    slice: known_document
+    description: Значение принимается только вместе с цитатой
+    fields:
+      - field: issuer.name_full
+        label: accepted
+        value: ПАО «Пример»
+        quote_contains: ПАО «Пример»
