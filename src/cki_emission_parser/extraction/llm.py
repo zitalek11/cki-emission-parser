@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
@@ -14,7 +15,20 @@ from cki_emission_parser.paths import prompts_dir
 
 _MAX_FRAGMENT_CHARS = 1400
 _MOEX_DEFAULT_URL = "https://api-new.ai.moex.com/v1"
-_MOEX_DEFAULT_MODEL = "strong"
+# ID с шлюза LiteLLM (fallback-список 2026-08-25). flagship — верхняя группа,
+# strong — её запасной вариант. gpt-oss на шлюзе нет.
+_MOEX_MODELS = {
+    "flagship": "flagship",
+    "strong": "strong",
+    "qwen35-397b": "qwen35-397b",
+    "qwen3-next": "Qwen3-Next",
+    "kimi": "kimi",
+    "glm": "glm",
+    "balanced": "balanced",
+    "fast": "fast",
+    "test1": "Test1",
+}
+_MOEX_DEFAULT_MODEL = "flagship"
 _OPENROUTER_DEFAULT_MODEL = "openai/gpt-4o-mini"
 
 
@@ -207,18 +221,26 @@ def resolve_model(base_url: str, model: str | None) -> str:
     if "moex.com" in base_url.lower():
         if not name or "/" in name:
             return _MOEX_DEFAULT_MODEL
-        return name
+        return _MOEX_MODELS.get(name.lower(), _MOEX_DEFAULT_MODEL)
     return name or _OPENROUTER_DEFAULT_MODEL
 
 
 def _http_error_message(code: int, url: str, model: Any, detail: str) -> str:
+    compact = _compact_llm_detail(detail)
     hint = ""
     if code == 404:
+        known = ", ".join(dict.fromkeys(_MOEX_MODELS.values()))
         hint = (
-            " Для шлюза MOEX в CKI_LLM_MODEL нужен ID модели (например strong), "
-            "а CKI_LLM_BASE_URL — https://api-new.ai.moex.com/v1 без /chat/completions."
+            f" ID {model!r} на шлюзе нет. Известные: {known}. "
+            f"Поставьте CKI_LLM_MODEL={_MOEX_DEFAULT_MODEL}."
         )
-    return f"LLM HTTP {code} {url} model={model}: {detail}.{hint}"
+    return f"LLM HTTP {code} {url} model={model}: {compact}.{hint}"
+
+
+def _compact_llm_detail(detail: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", detail)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:500]
 
 
 def _want_json_object(base_url: str) -> bool:

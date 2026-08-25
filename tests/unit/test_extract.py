@@ -157,6 +157,7 @@ def test_moex_skips_json_object_by_default(monkeypatch) -> None:
 
 def test_prefer_strong_model_id() -> None:
     assert _prefer_model(["fast", "strong", "medium"]) == "strong"
+    assert _prefer_model(["fast", "flagship", "strong"]) == "flagship"
 
 
 def test_normalize_moex_base_url() -> None:
@@ -168,6 +169,8 @@ def test_normalize_moex_base_url() -> None:
 
 
 def test_moex_rejects_openrouter_model_id() -> None:
-    assert resolve_model("https://api-new.ai.moex.com/v1", "openai/gpt-4o-mini") == "strong"
-    assert resolve_model("https://api-new.ai.moex.com/v1", None) == "strong"
+    assert resolve_model("https://api-new.ai.moex.com/v1", "openai/gpt-4o-mini") == "flagship"
+    assert resolve_model("https://api-new.ai.moex.com/v1", "gpt-oss") == "flagship"
+    assert resolve_model("https://api-new.ai.moex.com/v1", None) == "flagship"
     assert resolve_model("https://api-new.ai.moex.com/v1", "fast") == "fast"
+    assert resolve_model("https://api-new.ai.moex.com/v1", "strong") == "strong"

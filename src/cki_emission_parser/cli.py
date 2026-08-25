@@ -252,13 +252,13 @@ def _prefer_model(ids: list[str]) -> str | None:
     if not ids:
         return None
     rank = (
+        "flagship",
+        "qwen35-397b",
+        "qwen3-next",
         "strong",
-        "reasoning",
-        "gpt-4.1",
-        "gpt-4o",
-        "o3",
-        "o1",
-        "medium",
+        "kimi",
+        "glm",
+        "balanced",
         "fast",
     )
     lower = {item.lower(): item for item in ids}

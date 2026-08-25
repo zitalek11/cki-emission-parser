@@ -62,13 +62,14 @@ JSON извлечения содержит поля, цитаты и `review_que
 ```
 CKI_LLM_API_KEY=...
 CKI_LLM_BASE_URL=https://api-new.ai.moex.com/v1
-CKI_LLM_MODEL=strong
+CKI_LLM_MODEL=flagship
 ```
 
-В `model` указывайте **ID** (`strong`), не имя вроде `openai/gpt-4o-mini` —
-шлюз MOEX на неизвестный ID отвечает HTTP 404. URL — без хвоста
-`/chat/completions`. Проверка: `--llm-ping`. Без ключа поля остаются
-`not_found`.
+В `model` нужен **ID группы** шлюза: `flagship` (предпочтительно), иначе
+`strong`, `qwen35-397b`, `Qwen3-Next`, `kimi`, `glm`, `balanced`, `fast`.
+Имена вроде `gpt-oss` или `openai/gpt-4o-mini` шлюз не знает и отвечает 404.
+URL — без хвоста `/chat/completions`. Проверка: `--llm-ping`. Без ключа
+поля остаются `not_found`.
 
 ## Эталонные документы
 
